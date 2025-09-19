@@ -1,0 +1,60 @@
+name: "Terraform CI"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate-and-plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: envs/dev
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup GCP Credentials
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.x
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -input=false -out=tfplan.binary
+
+      - name: Save Terraform Plan to JSON
+        run: terraform show -json tfplan.binary > tfplan.json
+
+      - name: Run tfsec Scan
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: envs/dev
+
+      - name: Run Conftest Policy Scan
+        uses: open-policy-agent/conftest@v0.62.0
+        with:
+          policy: "policy.rego"
+          input: "envs/dev/tfplan.json"
