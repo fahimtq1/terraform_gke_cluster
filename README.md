@@ -337,10 +337,3 @@ terraform destroy
 > Review the plan and confirm. Consider deleting the state bucket **only after** all resources are destroyed and you no longer need history.
 
 ---
-
-## License
-Choose a license (e.g., **MIT**) and add a `LICENSE` file.
-
----
-
-> **Reflection prompt:** What additional policies best fit your organization—security, reliability, or cost? For example, enforce mandatory labels, limit regions, require private GKE control plane, or cap node autoscaling ranges in lower environments.
